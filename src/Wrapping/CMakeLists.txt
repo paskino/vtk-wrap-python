@@ -1,7 +1,32 @@
 cmake_minimum_required(VERSION 3.8)
 # project(Wrapping)
 
-find_package(Python COMPONENTS Interpreter Development)
+
+# if (CMAKE_ROLE)
+#   message (STATUS ">>>>>>>>>>>>> CMAKE_ROLE >>>>>${CMAKE_ROLE}<<<<<")
+# else()
+#   message (STATUS ">>>>>>>>>>>>> CMAKE_ROLE not set")
+# endif()
+
+find_package(Python COMPONENTS Interpreter Development.Module)
+# add_executable(void void.cxx)
+message(STATUS "COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/sp_dir.py")
+execute_process(COMMAND ${Python_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/sp_dir.py
+  OUTPUT_VARIABLE SP_DIR)
+  message(STATUS "SP_DIR ${SP_DIR}")
+# remove trailing newline  
+string(REGEX REPLACE "\n$" "" PYTHON_DEST ${SP_DIR})
+if(MSVC)
+  # set (python_destination ${PYTHON_DEST}/..)
+  cmake_path(GET PYTHON_DEST PARENT_PATH python_destination)
+endif()
+# message(FATAL_ERROR "python_destination ${python_destination}")
+
+
+# target_link_libraries(void
+#   PRIVATE
+#     Python3::Python)
+
 
 
 include(GNUInstallDirs)
@@ -10,6 +35,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}"
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
 
 # We just need the CommonCore and Python modules here.
+# these must be found earlier in the parent directory
 find_package(VTK COMPONENTS CommonCore Python)
 if (NOT VTK_FOUND)
   message("Skipping example: ${VTK_NOT_FOUND_MESSAGE}")
@@ -24,7 +50,12 @@ endif ()
 
 option(BUILD_SHARED_LIBS "Build shared or static libraries" "${_shared_default}")
 include(CTest)
+
+message (STATUS "CURRENT CMAKE_INSTALL_BINDIR ${CMAKE_INSTALL_BINDIR}")
+
 include(GNUInstallDirs)
+
+message (STATUS "CURRENT CMAKE_INSTALL_BINDIR ${CMAKE_INSTALL_BINDIR}")
 
 # First we scan the modules in our project to find out the dependency graph
 # between them.
@@ -39,8 +70,18 @@ vtk_module_scan(
   # Enable the tests for our modules.
   ENABLE_TESTS      ON)
 
-  message(STATUS "Python destination ${python_destination}")
+
+
+message(STATUS "Python destination ${python_destination}")
+if (MSVC) 
+  set (CMAKE_INSTALL_BINDIR "")
+endif()
 vtk_module_python_default_destination(python_destination)
+message(STATUS "Python destination ${python_destination}")
+cmake_path(GET python_destination RELATIVE_PART python_destination_rel)
+message(STATUS "Relative Python destination ${python_destination_rel}")
+set(python_destination ${python_destination_rel})
+message(STATUS "Python destination ${python_destination}")
 
 # Build the module we just scanned.
 vtk_module_build(MODULES ${modules})
