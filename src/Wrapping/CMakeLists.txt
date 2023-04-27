@@ -86,13 +86,15 @@ message(STATUS "Python destination ${python_destination}")
 # Build the module we just scanned.
 vtk_module_build(MODULES ${modules})
 
+set(python_package_name "wrapping")
+
 # Wrap it with Python.
 vtk_module_wrap_python(
   MODULES         ${modules}
   TARGET          Wrapping::WrappablePython
   WRAPPED_MODULES wrapping_modules
   INSTALL_EXPORT  wrapping_export
-  PYTHON_PACKAGE  "wrapping"
+  PYTHON_PACKAGE  "${python_package_name}"
   MODULE_DESTINATION  "${python_destination}"
   CMAKE_DESTINATION   "${CMAKE_INSTALL_LIBDIR}/cmake/WrappingPython"
   LIBRARY_DESTINATION "${CMAKE_INSTALL_LIBDIR}"
@@ -112,20 +114,20 @@ endforeach()
 list(JOIN python_modules ,  python_modules_string)
 set(InitContent "__all__ = [${python_modules_string}]\n")
 file(GENERATE
-  OUTPUT  "${CMAKE_BINARY_DIR}/${python_destination}/wrapping/__init__.py"
+  OUTPUT  "${CMAKE_BINARY_DIR}/${python_destination}/${python_package_name}/__init__.py"
   CONTENT "${InitContent}")
 install(
-  FILES       "${CMAKE_BINARY_DIR}/${python_destination}/wrapping/__init__.py"
-  DESTINATION "${python_destination}/wrapping/")
+  FILES       "${CMAKE_BINARY_DIR}/${python_destination}/${python_package_name}/__init__.py"
+  DESTINATION "${python_destination}/${python_package_name}/")
 
 # Install the module
 export(
   EXPORT    wrapping_export
   NAMESPACE Wrapping::
-  FILE      "${CMAKE_BINARY_DIR}/${python_destination}/wrapping/wrapping_export-targets.cmake")
+  FILE      "${CMAKE_BINARY_DIR}/${python_destination}/${python_package_name}/wrapping_export-targets.cmake")
 install(
   EXPORT      wrapping_export
   NAMESPACE   Wrapping::
   FILE        wrapping_export-targets.cmake
-  DESTINATION "${python_destination}/cmake/wrapping"
+  DESTINATION "${python_destination}/cmake/${python_package_name}"
 )
